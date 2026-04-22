@@ -62,6 +62,9 @@ COPY --from=shared-types-builder --chown=nodejs:nodejs /app/shared-types/package
 COPY --from=server-builder --chown=nodejs:nodejs /app/mcp-server/dist /app/dist
 COPY --from=server-builder --chown=nodejs:nodejs /app/mcp-server/package.json /app/package.json
 
+# Copy SQL schema files (needed for migrations)
+COPY --from=server-builder --chown=nodejs:nodejs /app/mcp-server/src/db/*.sql /app/dist/db/
+
 # Switch to non-root user
 USER nodejs
 
