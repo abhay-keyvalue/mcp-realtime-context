@@ -44,7 +44,7 @@ export interface ContextUpdate {
   tags?: string[];
   confidence?: number;
   metadata?: Record<string, any>;
-  expiresAt?: Date;
+  expiresAt?: Date | null;
 }
 
 export interface ContextQuery {

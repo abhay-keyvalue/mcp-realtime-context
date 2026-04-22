@@ -1,9 +1,10 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import fastifyPlugin from 'fastify-plugin';
 import fastifyJwt from '@fastify/jwt';
 import { config } from '../config';
 
-export async function authPlugin(fastify: FastifyInstance) {
-  fastify.register(fastifyJwt, {
+async function authPluginImplementation(fastify: FastifyInstance) {
+  await fastify.register(fastifyJwt, {
     secret: config.jwt.secret,
     sign: {
       expiresIn: config.jwt.expiresIn,
@@ -18,3 +19,5 @@ export async function authPlugin(fastify: FastifyInstance) {
     }
   });
 }
+
+export const authPlugin = fastifyPlugin(authPluginImplementation);

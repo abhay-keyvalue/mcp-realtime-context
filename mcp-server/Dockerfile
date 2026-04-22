@@ -1,31 +1,41 @@
 # Multi-stage build for optimal image size
 
-# Stage 1: Build shared types
-FROM node:18-alpine AS shared-types-builder
+# Stage 1: Install dependencies using workspace structure
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Copy workspace configuration (including package-lock.json)
+COPY package.json package-lock.json ./
+
+# Copy workspace package files
+COPY shared-types/package.json ./shared-types/
+COPY mcp-server/package.json ./mcp-server/
+
+# Install all dependencies including devDependencies (needed for build)
+RUN npm ci && npm cache clean --force
+
+# Stage 2: Build shared types
+FROM builder AS shared-types-builder
+WORKDIR /app
+COPY shared-types/ ./shared-types/
 WORKDIR /app/shared-types
-COPY shared-types/package*.json ./
-RUN npm ci --only=production
-COPY shared-types/ ./
 RUN npm run build
 
-# Stage 2: Build server
-FROM node:18-alpine AS server-builder
+# Stage 3: Build server
+FROM builder AS server-builder
 WORKDIR /app
 
 # Copy shared types build
 COPY --from=shared-types-builder /app/shared-types /app/shared-types
 
-# Copy server package files
-COPY mcp-server/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
 # Copy server source
-COPY mcp-server/ ./
+COPY mcp-server/ ./mcp-server/
 
-# Build TypeScript
+# Build server TypeScript
+WORKDIR /app/mcp-server
 RUN npm run build
 
-# Stage 3: Production image
+# Stage 4: Production image
 FROM node:18-alpine AS production
 
 # Set working directory
@@ -38,14 +48,19 @@ RUN apk add --no-cache dumb-init
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# Copy shared types from builder
-COPY --from=shared-types-builder /app/shared-types/dist /app/node_modules/@mcp/shared-types/dist
-COPY --from=shared-types-builder /app/shared-types/package.json /app/node_modules/@mcp/shared-types/
+# Copy node_modules from builder (includes all workspaces)
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules /app/node_modules
 
-# Copy node_modules and built files from server builder
-COPY --from=server-builder --chown=nodejs:nodejs /app/node_modules /app/node_modules
-COPY --from=server-builder --chown=nodejs:nodejs /app/dist /app/dist
-COPY --from=server-builder --chown=nodejs:nodejs /app/package.json /app/
+# Copy workspace-specific node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/mcp-server/node_modules /app/node_modules
+
+# Copy shared types build
+COPY --from=shared-types-builder --chown=nodejs:nodejs /app/shared-types/dist /app/shared-types/dist
+COPY --from=shared-types-builder --chown=nodejs:nodejs /app/shared-types/package.json /app/shared-types/
+
+# Copy server built files
+COPY --from=server-builder --chown=nodejs:nodejs /app/mcp-server/dist /app/dist
+COPY --from=server-builder --chown=nodejs:nodejs /app/mcp-server/package.json /app/package.json
 
 # Switch to non-root user
 USER nodejs

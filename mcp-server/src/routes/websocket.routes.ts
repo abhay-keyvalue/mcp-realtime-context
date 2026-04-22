@@ -56,7 +56,7 @@ export async function websocketRoutes(fastify: FastifyInstance) {
             }));
           }
         } catch (error) {
-          fastify.log.error('WebSocket message error:', error);
+          fastify.log.error({ err: error }, 'WebSocket message error');
         }
       });
 
@@ -65,12 +65,12 @@ export async function websocketRoutes(fastify: FastifyInstance) {
       });
 
       socket.on('error', (error) => {
-        fastify.log.error(`WebSocket error for client ${clientId}:`, error);
+        fastify.log.error({ err: error }, `WebSocket error for client ${clientId}`);
         websocketService.unregisterClient(clientId);
       });
 
     } catch (error) {
-      fastify.log.error('WebSocket connection error:', error);
+      fastify.log.error({ err: error }, 'WebSocket connection error');
       socket.close(1008, 'Authentication failed');
     }
   });
