@@ -1,0 +1,34 @@
+{
+  "name": "mcp-realtime-context",
+  "version": "1.0.0",
+  "description": "Production-grade MCP server system for real-time shared AI context",
+  "private": true,
+  "workspaces": [
+    "shared-types",
+    "mcp-server",
+    "mcp-cli"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd shared-types && npm install && cd ../mcp-server && npm install && cd ../mcp-cli && npm install",
+    "build:all": "cd shared-types && npm run build && cd ../mcp-server && npm run build && cd ../mcp-cli && npm run build",
+    "dev": "docker-compose -f docker-compose.dev.yml up -d && cd mcp-server && npm run dev",
+    "prod": "docker-compose up -d",
+    "clean": "rm -rf */node_modules */dist && docker-compose down -v"
+  },
+  "keywords": [
+    "mcp",
+    "context",
+    "ai",
+    "real-time",
+    "websocket",
+    "fastify",
+    "postgresql",
+    "redis"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/mcp-realtime-context.git"
+  }
+}

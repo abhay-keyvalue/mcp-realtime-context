@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: mcp-postgres
+    env: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./docker/postgres.Dockerfile
+    dockerContext: ./docker
+    envVars:
+      - key: POSTGRES_DB
+        value: mcp_context
+      - key: POSTGRES_USER
+        generateValue: true
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+    disk:
+      name: postgres-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
+
+  # Redis Cache
+  - type: pserv
+    name: mcp-redis
+    env: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./docker/redis.Dockerfile
+    dockerContext: ./docker
+    disk:
+      name: redis-data
+      mountPath: /data
+      sizeGB: 1
+
+  # MCP Server
+  - type: web
+    name: mcp-server
+    env: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./mcp-server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: mcp-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: pserv
+          name: mcp-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: LOG_LEVEL
+        value: info
+      - key: CORS_ORIGIN
+        value: "*"

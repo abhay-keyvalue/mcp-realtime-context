@@ -1,0 +1,52 @@
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+**/node_modules
+
+# Environment
+.env
+.env.*
+**/.env
+
+# IDE
+.vscode
+.idea
+**/.vscode
+**/.idea
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Docker
+docker-compose*.yml
+.dockerignore
+
+# Build artifacts in subdirectories (they will be built in the container)
+**/dist
+**/build
+
+# TypeScript source (will be copied selectively)
+# Keep this flexible per service
+
+# Testing
+coverage
+**/__tests__
+**/*.test.ts
+**/*.spec.ts
+
+# Misc
+.DS_Store
+*.log
+logs/
+tmp/
